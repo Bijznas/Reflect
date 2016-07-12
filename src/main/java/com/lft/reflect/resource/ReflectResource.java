@@ -38,13 +38,7 @@ public class ReflectResource {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return Response.status(Response.Status.NOT_FOUND).build();
-        }catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
+        }catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException  e) {
             e.printStackTrace();
         }
         return Response.status(Response.Status.NOT_FOUND).build();
@@ -55,17 +49,14 @@ public class ReflectResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response post(@PathParam("resource")String resource, Map map){
-        System.out.println(">>>>>>" + map);
         try {
             Class resourceClass = Class.forName("com.lft.reflect.model." + Utils.capitalizeFirstLetter(resource));
             Object t = resourceClass.newInstance();
             Method[] methods = resourceClass.getMethods();
 
             for(Method method : methods){
-                //System.out.println(method.getParameterTypes().getClass() + " " + method.getName());
-                if(isSetter(method) && method.getName() != "setStudentId") {
+                if(isSetter(method) && method.getName() != "setStudentId" && method.getName() != "setId") {
                     Object ob= map.get(Utils.decapitalizeFirstLetter(method.getName().split("set")[1]));
-                    System.out.println(ob);
                     method.invoke(t, ob);
                 }
             }
@@ -77,15 +68,7 @@ public class ReflectResource {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return Response.status(Response.Status.NOT_FOUND).build();
-        }catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }catch (URISyntaxException e) {
+        }catch (InstantiationException|IllegalAccessException|InvocationTargetException|NoSuchMethodException|URISyntaxException e) {
             e.printStackTrace();
         }
         return Response.status(Response.Status.NOT_FOUND).build();
