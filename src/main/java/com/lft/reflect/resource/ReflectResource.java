@@ -1,10 +1,7 @@
 package com.lft.reflect.resource;
 
-import com.lft.reflect.dao.StudentDao;
-import com.lft.reflect.dao.StudentDaoImpl;
-import com.lft.reflect.model.Student;
 import com.lft.reflect.service.ReflectService;
-import com.lft.reflect.service.StudentServiceImpl;
+import com.lft.reflect.service.ReflectServiceImpl;
 import com.lft.reflect.utils.Utils;
 
 import javax.ws.rs.*;
@@ -24,51 +21,36 @@ import java.util.Map;
 @Path("/{resource}")
 public class ReflectResource {
 
-    ReflectService reflectService;
-
+    //TODO Use CDI for this
+    ReflectService reflectService = new ReflectServiceImpl();
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response get(@PathParam("resource")String resource){
         try {
-            Class aClass = Class.forName("com.lft.reflect.service." + Utils.capitalizeFirstLetter(resource) + "ServiceImpl");
-            reflectService = (ReflectService)aClass.getConstructor().newInstance();
-            List students = reflectService.getAll();
+            Class resourceClass = reflectService.getClassFromResource(resource);
+            List students = reflectService.getAll(resourceClass.getSimpleName());
             return Response.status(Response.Status.OK).entity(students).build();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return Response.status(Response.Status.NOT_FOUND).build();
-        }catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException  e) {
-            e.printStackTrace();
         }
-        return Response.status(Response.Status.NOT_FOUND).build();
 
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response post(@PathParam("resource")String resource, Map map){
+    public Response save(@PathParam("resource")String resource, Map map){
         try {
-            Class resourceClass = Class.forName("com.lft.reflect.model." + Utils.capitalizeFirstLetter(resource));
-            Object t = resourceClass.newInstance();
-            Method[] methods = resourceClass.getMethods();
-
-            for(Method method : methods){
-                if(isSetter(method) && method.getName() != "setStudentId" && method.getName() != "setId") {
-                    Object ob= map.get(Utils.decapitalizeFirstLetter(method.getName().split("set")[1]));
-                    method.invoke(t, ob);
-                }
-            }
-
-            Class aClass = Class.forName("com.lft.reflect.service." + Utils.capitalizeFirstLetter(resource) + "ServiceImpl");
-            reflectService = (ReflectService)aClass.getConstructor().newInstance();
-            reflectService.add(t);
+            Class resourceClass = reflectService.getClassFromResource(resource);
+            Object obj = reflectService.constructObjectFrom(resourceClass, map, null);
+            reflectService.saveOrUpdate(obj);
             return Response.created(new URI("http://www.google.com")).build();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return Response.status(Response.Status.NOT_FOUND).build();
-        }catch (InstantiationException|IllegalAccessException|InvocationTargetException|NoSuchMethodException|URISyntaxException e) {
+        }catch (InstantiationException|IllegalAccessException|InvocationTargetException|URISyntaxException|NoSuchMethodException e) {
             e.printStackTrace();
         }
         return Response.status(Response.Status.NOT_FOUND).build();
@@ -76,19 +58,25 @@ public class ReflectResource {
     }
 
 
-    public static boolean isGetter(Method method){
-        if(!method.getName().startsWith("get"))      return false;
-        if(method.getParameterTypes().length != 0)   return false;
-        if(void.class.equals(method.getReturnType())) return false;
-        return true;
-    }
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{resourceId}")
+    public Response update(@PathParam("resource")String resource, @PathParam("resourceId")Integer resourceId, Map map){
+        try {
+            Class resourceClass = reflectService.getClassFromResource(resource);
+            Object obj = reflectService.constructObjectFrom(resourceClass, map, resourceId);
+            reflectService.saveOrUpdate(obj);
+            return Response.ok().build();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }catch (InstantiationException|IllegalAccessException|InvocationTargetException|NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
 
-    public static boolean isSetter(Method method){
-        if(!method.getName().startsWith("set")) return false;
-        if(method.getParameterTypes().length != 1) return false;
-        return true;
     }
-
 
 
 }

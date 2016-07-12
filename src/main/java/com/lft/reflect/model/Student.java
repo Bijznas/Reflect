@@ -13,7 +13,7 @@ import java.io.Serializable;
 public class Student implements Serializable {
 
     private static final long serialVersionUID = -6403807506004261432L;
-    private Integer studentId;
+    private Integer id;
     private String code;
     private String name;
     private Integer currentClass;
@@ -21,8 +21,8 @@ public class Student implements Serializable {
     public Student() {
     }
 
-    public Student(Integer studentId, String code, String name, Integer currentClass) {
-        this.studentId = studentId;
+    public Student(Integer id, String code, String name, Integer currentClass) {
+        this.id = id;
         this.code = code;
         this.name = name;
         this.currentClass = currentClass;
@@ -30,13 +30,13 @@ public class Student implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "student_id", unique = true, nullable = false)
-    public Integer getStudentId() {
-        return this.studentId;
+    @Column(name = "id", unique = true, nullable = false)
+    public Integer getId() {
+        return this.id;
     }
 
-    public void setStudentId(Integer studentId) {
-        this.studentId = studentId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     @Column(name = "code", unique = true, nullable = false, length = 10)
@@ -69,7 +69,7 @@ public class Student implements Serializable {
     @Override
     public String toString() {
         return "Student{" +
-                "studentId=" + studentId +
+                "id=" + id +
                 ", code='" + code + '\'' +
                 ", name='" + name + '\'' +
                 ", currentClass=" + currentClass +
